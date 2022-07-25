@@ -12,7 +12,7 @@ internal class SizeLimitedSynchMap {
         assertEquals(map.size, 1)
 
         map[2] = "2"
-        assertEquals(map[1], "1")
+        assertEquals(map[1], null)
         assertEquals(map[2], "2")
         assertEquals(map.size, 1)
     }
