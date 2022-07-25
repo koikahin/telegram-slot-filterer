@@ -25,5 +25,10 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("org.drinkless.tdlib.example.Main")
+    applicationDefaultJvmArgs = listOf("-Djava.library.path=tdlib/bin")
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
 }
