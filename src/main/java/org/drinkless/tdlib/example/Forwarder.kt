@@ -4,7 +4,10 @@ import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
 import org.drinkless.tdlib.TdApi.*
 
-private val sourceChatIds = arrayOf(allSlots, mockedAllSlots)
+private val sourceChatIds = arrayOf(allSlots, mockedAllSlots).also {
+    println("Listening to: ${it.joinToString(", ")}")
+}
+
 private const val targetChatId = filteredSlots
 private const val priorityTargetChatId = sri
 
