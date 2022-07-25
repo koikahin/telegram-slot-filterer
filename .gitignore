@@ -1,0 +1,25 @@
+# Gradle Project Files
+.gradle
+build
+
+# IntelliJ Project Files
+.idea
+*.iml
+*.ipr
+*.iws
+**/out/
+
+# Local configurations
+**/resources/local*.conf
+
+# Local Logs
+*.log
+
+# vm crash logs
+hs_err_pid*
+
+# Mac junk files
+**/.DS_Store 
+**/bin/
+
+tdlib/
