@@ -30,7 +30,7 @@ object AuthManager {
                 parameters.enableStorageOptimizer = true
                 Main.client.send(TdApi.SetTdlibParameters(parameters), AuthorizationRequestHandler(this))
             }
-            TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR -> Main.client!!.send(
+            TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR -> Main.client.send(
                 TdApi.CheckDatabaseEncryptionKey(),
                 AuthorizationRequestHandler(this)
             )
