@@ -78,6 +78,7 @@ assert should_forward("https") == True
 assert should_forward("PINg me for !") == False
 assert should_forward("this is fake") == False
 assert should_forward("contact me at 92832983") == False
+assert should_forward("Pattern worked: Fresh H1B Dropbox Mumbai in Nov 2023") == True
 
 assert is_priority("bulk") == True
 assert is_priority("bulk available") == True

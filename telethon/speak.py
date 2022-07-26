@@ -4,7 +4,7 @@ import threading
 
 os_type = platform.system()
 
-announcement = "hear ye hear ye, slots opened..."
+announcement = "\"hear ye hear ye, slots opened... hear ye hear ye, slots opened...\""
 
 def _shout_sync(): 
     if os_type == 'Darwin': 

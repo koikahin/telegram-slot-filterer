@@ -38,6 +38,8 @@ async def run_forwarder(client: TelegramClient):
 
     message_mapping = {}
 
+    file = open("interesting-events", "a")
+
     # @client.on(events.MessageDeleted(chats=source))
     async def on_message_deleted(event):
         try:
@@ -54,23 +56,33 @@ async def run_forwarder(client: TelegramClient):
 
     @client.on(events.NewMessage(chats=source))
     async def on_new_message(event):
-        try:
-            message: types.Message = event.message
-            text = message.text
-            if pattern_check.should_forward(text):
-                message_sent_at = message.date
-                now = datetime.now(ZoneInfo(key='America/New_York'))
-                delay = now - message_sent_at
-                now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                print(now_str, delay, '|', text)
-                if pattern_check.is_priority(text):
-                    speak.shout()
+        message: types.Message = event.message
+        text = message.text
 
-            # message.forward_to()
-            # forwarded_message = await client.forward_messages(target, message)
-            # message_mapping[message.id] = forwarded_message
-        except Exception as err:
-            raise err
+        message_sent_at = message.date
+        now = datetime.now(ZoneInfo(key='America/New_York'))
+        delay = now - message_sent_at
+        now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        print(now_str, delay, '|', text)
+        
+        should_forward = pattern_check.should_forward(text)
+        is_priority = pattern_check.is_priority(text)
+        
+        out = " * " if should_forward and is_priority else "   "
+        out = out + "imp > " if should_forward else "      "
+        out = out + f"{now_str} {delay} | {text}"
+
+        print(out)
+
+        if should_forward:
+            file.write(out)
+            file.write('\n')
+            if is_priority: 
+                speak.shout()
+
+        # message.forward_to()
+        # forwarded_message = await client.forward_messages(target, message)
+        # message_mapping[message.id] = forwarded_message
 
     await client.start()
     await client.run_until_disconnected()
