@@ -29,6 +29,21 @@ internal class AllowedMessagesKtTest {
         "i earned $400" iss disallowed
         "make $$$" iss disallowed
         "make $" iss allowed
+
+        "@AwesomeAdmin_US" iss disallowed
+        "@blackwidow" iss disallowed
+        "blackwidow" iss allowed
+        "AwesomeAdmin_US" iss allowed
+        "http" iss allowed
+        "http:" iss allowed
+        "http://" iss disallowed
+        "httpd" iss allowed
+        "https://" iss disallowed
+        "https" iss allowed
+        "PINg me for !" iss disallowed
+        "this is fake" iss disallowed
+        "contact me at 92832983" iss disallowed
+        "Pattern worked: Fresh H1B Dropbox Mumbai in Nov 2023" iss allowed
     }
 
     @Test

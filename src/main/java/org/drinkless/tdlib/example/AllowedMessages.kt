@@ -9,7 +9,14 @@ private val DISALLOWED = arrayOf(
     "\\bcrypto",
     "\\bmoney\\b",
     "\\$[0-9]+",
-    "\\$\\$+"
+    "\\$\\$+",
+    "@AwesomeAdmin_US",
+    "@blackwidow",
+    "http://",
+    "https://",
+    "ping me",
+    "contact me",
+    "fake",
 )
 
 private val PRIORITY = arrayOf(

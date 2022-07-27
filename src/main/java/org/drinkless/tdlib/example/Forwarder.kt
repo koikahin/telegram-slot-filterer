@@ -95,12 +95,14 @@ private fun onMessagePosted(message: Message, client: Client) {
     val now = Instant.now()
     val delay = Duration.between(msgTime, now).seconds
 
-    println(
-        (if (priority) "**" else "  ") +
-                (if (shouldFwd) " fwd  | " else "      | ") +
-                fmt.format(now.atZone(ZoneId.systemDefault())) +
-                " - " + delay.toString().padStart(3) +
-                " | " + msgText)
+    if (shouldFwd)
+        println(
+            (if (priority) "**" else "  ") +
+                    (if (shouldFwd) " fwd  | " else "      | ") +
+                    fmt.format(now.atZone(ZoneId.systemDefault())) +
+                    " - " + delay.toString().padStart(3) +
+                    " | " + msgText
+        )
 
 //    if (shouldFwd) {
 //        idMessages[message.id] = msgText
