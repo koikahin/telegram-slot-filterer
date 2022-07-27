@@ -7,8 +7,8 @@ import org.drinkless.tdlib.TdApi
 //parameters.apiId = 94575
 //parameters.apiHash = "a3406de8d171bb422bb6ddf3bbd800e2"
 
-const val apiId = 9366375
-const val apiHash = "f5210f6295fd7dcb64fc16379213a22a"
+const val apiId = 13042228
+const val apiHash = "5fbacaa51fd4ded26972fba200bd16e7"
 
 object AuthManager {
     private var authorizationState: TdApi.AuthorizationState? = null

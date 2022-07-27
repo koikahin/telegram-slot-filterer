@@ -3,6 +3,10 @@ package org.drinkless.tdlib.example
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
 import org.drinkless.tdlib.TdApi.*
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 private val sourceChatIds = arrayOf(allSlots, mockedAllSlots).also {
     println("Listening to: ${it.joinToString(", ")}")
@@ -24,15 +28,17 @@ fun interestingUpdates(event: Object) {
                 return
             onMessagePosted(message, client)
         }
+
         is UpdateMessageContent -> {
             if (event.chatId !in sourceChatIds)
                 return
-            onEditedMessage(event, client)
+//            onEditedMessage(event, client)
         }
+
         is UpdateDeleteMessages -> {
             if (event.chatId !in sourceChatIds)
                 return
-            onMessageDelete(event, client)
+//            onMessageDelete(event, client)
         }
     }
 }
@@ -74,22 +80,34 @@ private fun Client.sendMessage(message: String, destChatId: Long) {
             null,
             null,
             InputMessageText(FormattedText(message, null), false, true)
-        ))
+        )
+    )
 }
+
+private val fmt = DateTimeFormatter.ofPattern("MMM dd hh:mm:ss a")
 
 private fun onMessagePosted(message: Message, client: Client) {
     val msgText = message.content.text()!!
     val shouldFwd = msgText.shouldFwd()
     val priority = msgText.shouldFwdPriority()
 
-    println("${if (priority) "**" else "  "}${if (shouldFwd) " fwd  | " else "      | "}$msgText")
+    val msgTime = Instant.ofEpochSecond(message.date.toLong())
+    val now = Instant.now()
+    val delay = Duration.between(msgTime, now).seconds
 
-    if (shouldFwd) {
-        idMessages[message.id] = msgText
-        if (priority)
-            client.fwd(priorityTargetChatId, message, priorityTargetMappings)
-        client.fwd(targetChatId, message, targetMappings)
-    }
+    println(
+        (if (priority) "**" else "  ") +
+                (if (shouldFwd) " fwd  | " else "      | ") +
+                fmt.format(now.atZone(ZoneId.systemDefault())) +
+                " - " + delay.toString().padStart(3) +
+                " | " + msgText)
+
+//    if (shouldFwd) {
+//        idMessages[message.id] = msgText
+//        if (priority)
+//            client.fwd(priorityTargetChatId, message, priorityTargetMappings)
+//        client.fwd(targetChatId, message, targetMappings)
+//    }
 }
 
 private fun Client.propagateDelete(event: UpdateDeleteMessages, targetChatId: Long, targetMappings: IdMappings) {
@@ -119,31 +137,39 @@ private fun Client.fwd(targetChatId: Long, message: Message, mappings: IdMapping
     }
 }
 
-private fun MessageContent.text(): String? = when(this) {
+private fun MessageContent.text(): String? = when (this) {
     is MessageText -> {
         this.text.text
     }
+
     is MessagePhoto -> {
         this.caption.text
     }
+
     else -> {
         System.err.println("Unknown content: $this")
         null
     }
 }
 
-inline fun <reified T : Object> Client.sendValidated(query: TdApi.Function<*>, crossinline resultHandler: (T) -> Unit = {}) {
+inline fun <reified T : Object> Client.sendValidated(
+    query: TdApi.Function<*>,
+    crossinline resultHandler: (T) -> Unit = {}
+) {
     send(query) {
         when (it) {
             is Error -> {
                 System.err.println("Encountered error: $it")
             }
+
             null -> {
                 System.err.println("Unexpected null response")
             }
+
             !is T -> {
                 System.err.println("Expected result type: ${T::class.java} but found ${it.javaClass}")
             }
+
             else -> {
                 resultHandler(it)
             }
@@ -154,7 +180,7 @@ inline fun <reified T : Object> Client.sendValidated(query: TdApi.Function<*>, c
 fun main() {
     fun test(str: String) {
         val fwd = if (str.shouldFwd()) "YES: " else " NO: "
-        val urgent = if(str.shouldFwdPriority()) "*" else " "
+        val urgent = if (str.shouldFwdPriority()) "*" else " "
         println(urgent + fwd + str)
     }
     test("na")
