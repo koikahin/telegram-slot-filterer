@@ -17,13 +17,12 @@ private val DISALLOWED = arrayOf(
     "ping me",
     "contact me",
     "fake",
+    "money"
 )
 
 private val PRIORITY = arrayOf(
     "\\bbulk\\b",
-    "\\blots\\b.*of.*slots",
-    "\\bmany\\b.*avail",
-    "\\bseveral\\b.*avail",
+    "\\b(several|many|lot).*(slot|avail|opening|booking)"
 )
 
 private val DISALLOWED_REGEXES = DISALLOWED.map { Regex(it, RegexOption.IGNORE_CASE) }

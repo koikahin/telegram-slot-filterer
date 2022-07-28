@@ -84,7 +84,8 @@ private fun Client.sendMessage(message: String, destChatId: Long) {
     )
 }
 
-private val fmt = DateTimeFormatter.ofPattern("MMM dd hh:mm:ss a")
+private val soutFmt = DateTimeFormatter.ofPattern("MMM dd hh:mm:ss a")
+private val fwdFmt = DateTimeFormatter.ofPattern("hh:mm:ss a")
 
 private fun onMessagePosted(message: Message, client: Client) {
     val msgText = message.content.text()!!
@@ -95,14 +96,17 @@ private fun onMessagePosted(message: Message, client: Client) {
     val now = Instant.now()
     val delay = Duration.between(msgTime, now).seconds
 
-    if (shouldFwd)
-        println(
-            (if (priority) "**" else "  ") +
-                    (if (shouldFwd) " fwd  | " else "      | ") +
-                    fmt.format(now.atZone(ZoneId.systemDefault())) +
-                    " - " + delay.toString().padStart(3) +
-                    " | " + msgText
+    if (shouldFwd) {
+        println(if (priority) "**" else "  " +
+                if (shouldFwd) " fwd  | " else "      | " +
+                        soutFmt.format(now.atZone(ZoneId.systemDefault())) +
+                        " - " + delay.toString().padStart(3) +
+                        " | " + msgText
         )
+        if (priority) {
+            client.sendMessage(fwdFmt.format(msgTime.atZone(ZoneId.systemDefault())) + ": $msgText", priorityTargetChatId)
+        }
+    }
 
 //    if (shouldFwd) {
 //        idMessages[message.id] = msgText
@@ -145,11 +149,12 @@ private fun MessageContent.text(): String? = when (this) {
     }
 
     is MessagePhoto -> {
+        this.photo
         this.caption.text
     }
 
     else -> {
-        System.err.println("Unknown content: $this")
+//        System.err.println("Unknown content: $this")
         null
     }
 }
@@ -177,35 +182,5 @@ inline fun <reified T : Object> Client.sendValidated(
             }
         }
     }
-}
-
-fun main() {
-    fun test(str: String) {
-        val fwd = if (str.shouldFwd()) "YES: " else " NO: "
-        val urgent = if (str.shouldFwdPriority()) "*" else " "
-        println(urgent + fwd + str)
-    }
-    test("na")
-    test("naa")
-    test("no tavailable")
-    test("not available")
-    test("not AvaIl")
-    test("chennai not AvaIl")
-    test("chennai notAvaIl")
-    test("chennai na")
-    test("na delhi")
-    test("nA delhi")
-    test("n A delhi")
-    test("NA delhi")
-    test("NA|")
-    test("baNA")
-    test("|NA")
-
-    test("bulk")
-    test("bulkaa")
-    test("abulk")
-    test("abulk")
-    test("slots avail in bulk")
-    test("slots avail in bulk in chn")
 }
 

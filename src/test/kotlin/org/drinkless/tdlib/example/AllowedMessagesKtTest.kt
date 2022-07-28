@@ -8,57 +8,64 @@ import org.junit.jupiter.api.Test
 internal class AllowedMessagesKtTest {
     @Test
     fun allowedTest() {
-        "NAa" iss allowed
-        "NA" iss disallowed
-        "nA" iss disallowed
-        " na" iss disallowed
-        "ana" iss allowed
-        "n a" iss allowed
-        "na all" iss disallowed
-        ".na" iss disallowed
-        "not av" iss allowed
-        "not available" iss disallowed
-        "whynot available" iss allowed
-        "none available" iss disallowed
-        "no slots available" iss disallowed
-        "ch, del no slots available" iss disallowed
-        "none available in che" iss disallowed
-        "anone avail" iss allowed
-        "make money" iss disallowed
-        "get rich mining crypto" iss disallowed
-        "i earned $400" iss disallowed
-        "make $$$" iss disallowed
-        "make $" iss allowed
+        "NAa" shouldBe allowed
+        "NA" shouldBe disallowed
+        "nA" shouldBe disallowed
+        " na" shouldBe disallowed
+        "ana" shouldBe allowed
+        "n a" shouldBe allowed
+        "na all" shouldBe disallowed
+        ".na" shouldBe disallowed
+        "not av" shouldBe allowed
+        "not available" shouldBe disallowed
+        "whynot available" shouldBe allowed
+        "none available" shouldBe disallowed
+        "no slots available" shouldBe disallowed
+        "ch, del no slots available" shouldBe disallowed
+        "none available in che" shouldBe disallowed
+        "anone avail" shouldBe allowed
+        "make money" shouldBe disallowed
+        "get rich mining crypto" shouldBe disallowed
+        "i earned $400" shouldBe disallowed
+        "make $$$" shouldBe disallowed
+        "make $" shouldBe allowed
 
-        "@AwesomeAdmin_US" iss disallowed
-        "@blackwidow" iss disallowed
-        "blackwidow" iss allowed
-        "AwesomeAdmin_US" iss allowed
-        "http" iss allowed
-        "http:" iss allowed
-        "http://" iss disallowed
-        "httpd" iss allowed
-        "https://" iss disallowed
-        "https" iss allowed
-        "PINg me for !" iss disallowed
-        "this is fake" iss disallowed
-        "contact me at 92832983" iss disallowed
-        "Pattern worked: Fresh H1B Dropbox Mumbai in Nov 2023" iss allowed
+        "@AwesomeAdmin_US" shouldBe disallowed
+        "@blackwidow" shouldBe disallowed
+        "blackwidow" shouldBe allowed
+        "AwesomeAdmin_US" shouldBe allowed
+        "http" shouldBe allowed
+        "http:" shouldBe allowed
+        "http://" shouldBe disallowed
+        "httpd" shouldBe allowed
+        "https://" shouldBe disallowed
+        "https" shouldBe allowed
+        "PINg me for !" shouldBe disallowed
+        "this is fake" shouldBe disallowed
+        "contact me at 92832983" shouldBe disallowed
+        "Pattern worked: Fresh H1B Dropbox Mumbai in Nov 2023" shouldBe allowed
+        "making money" shouldBe disallowed
+        "make money by" shouldBe disallowed
+        "make a lot of money" shouldBe disallowed
+        "like making a lot of money" shouldBe disallowed
     }
 
     @Test
     fun priorityTest() {
-        "bulk" iss priority
-        "bulk available" iss priority
-        "Bulk Available" iss priority
-        "opened up in bulK" iss priority
-        "slots available in bulk" iss priority
-        "several slots are available" iss priority
-        "many slots are available" iss priority
-        "many slots are available in ch" iss priority
-        "several slots available in ch" iss priority
-        "several slots available in ch" iss priority
-        "severalare available" iss not_priority
+        "bulk" shouldBe priority
+        "bulk available" shouldBe priority
+        "Bulk Available" shouldBe priority
+        "opened up in bulK" shouldBe priority
+        "slots available in bulk" shouldBe priority
+        "several slots are available" shouldBe priority
+        "many slots are available" shouldBe priority
+        "many slots are available in ch" shouldBe priority
+        "several slots available in ch" shouldBe priority
+        "several slots available in ch" shouldBe priority
+        "severalare available" shouldBe priority
+        "saw many openings" shouldBe priority
+        "several" shouldBe not_priority
+        "openings" shouldBe not_priority
     }
 }
 
@@ -68,7 +75,7 @@ object allowed
 object priority
 object not_priority
 
-private infix fun String.iss(obj: Any) = when(obj) {
+private infix fun String.shouldBe(obj: Any) = when(obj) {
     is disallowed -> this.matchesDisallowed() shouldBe true
     is allowed -> this.matchesDisallowed() shouldBe false
     is priority -> this.matchesPriority() shouldBe true
