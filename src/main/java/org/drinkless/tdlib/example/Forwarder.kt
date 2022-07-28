@@ -97,8 +97,8 @@ private fun onMessagePosted(message: Message, client: Client) {
     val delay = Duration.between(msgTime, now).seconds
 
     if (shouldFwd) {
-        println(if (priority) "**" else "  " +
-                if (shouldFwd) " fwd  | " else "      | " +
+        println((if (priority) "**" else "  ") +
+                (if (shouldFwd) " fwd  | " else "      | ") +
                         soutFmt.format(now.atZone(ZoneId.systemDefault())) +
                         " - " + delay.toString().padStart(3) +
                         " | " + msgText
