@@ -2,13 +2,10 @@ package org.drinkless.tdlib.example
 
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
+import slotfilter.Consts.API_HASH
+import slotfilter.Consts.API_ID
+import slotfilter.newLine
 
-
-//parameters.apiId = 94575
-//parameters.apiHash = "a3406de8d171bb422bb6ddf3bbd800e2"
-
-const val apiId = 13042228
-const val apiHash = "5fbacaa51fd4ded26972fba200bd16e7"
 
 object AuthManager {
     private var authorizationState: TdApi.AuthorizationState? = null
@@ -22,8 +19,8 @@ object AuthManager {
                 parameters.databaseDirectory = "tdlib"
                 parameters.useMessageDatabase = true
                 parameters.useSecretChats = true
-                parameters.apiId = apiId
-                parameters.apiHash = apiHash
+                parameters.apiId = API_ID
+                parameters.apiHash = API_HASH
                 parameters.systemLanguageCode = "en"
                 parameters.deviceModel = "Desktop"
                 parameters.applicationVersion = "1.0"
@@ -84,7 +81,7 @@ object AuthManager {
                     Main.canQuit = true
                 }
             }
-            else -> System.err.println("Unsupported authorization state:$lineSeparator$authorizationState")
+            else -> System.err.println("Unsupported authorization state:$newLine$authorizationState")
         }
     }
 }

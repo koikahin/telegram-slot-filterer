@@ -1,10 +1,15 @@
-package org.drinkless.tdlib.example
+package slotfilter
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
 import org.drinkless.tdlib.TdApi.*
+import org.drinkless.tdlib.example.*
+import slotfilter.Consts.CHAT_ALL_SLOTS
+import slotfilter.Consts.CHAT_FILTERED_SLOTS
+import slotfilter.Consts.CHAT_MOCKED_ALL_SLOTS
+import slotfilter.Consts.CHAT_SRI
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -14,9 +19,9 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 
-private const val targetChatId = filteredSlots
-private const val priorityTargetChatId = sri
-private val sourceChatIds = arrayOf(allSlots, mockedAllSlots).also {
+private const val targetChatId = CHAT_FILTERED_SLOTS
+private const val priorityTargetChatId = CHAT_SRI
+private val sourceChatIds = arrayOf(CHAT_ALL_SLOTS, CHAT_MOCKED_ALL_SLOTS).also {
     println("Listening to: ${it.joinToString(", ")}")
 }
 private val destChatIds = arrayOf(targetChatId, priorityTargetChatId)

@@ -9,6 +9,7 @@ package org.drinkless.tdlib.example
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.Client.ResultHandler
 import org.drinkless.tdlib.TdApi.*
+import slotfilter.newLine
 import java.io.IOError
 import java.io.IOException
 import java.util.*
@@ -112,16 +113,16 @@ object Main {
         synchronized(mainChatList) {
             if (!haveFullMainChatList && limit > mainChatList.size) {
                 // send LoadChats request if there are some unknown chats and have not enough known chats
-                client!!.send(LoadChats(ChatListMain(), limit - mainChatList.size), ResultHandler { `object` ->
+                client.send(LoadChats(ChatListMain(), limit - mainChatList.size), ResultHandler { `object` ->
                     when (`object`.constructor) {
                         Error.CONSTRUCTOR -> if ((`object` as Error).code == 404) {
                             synchronized(mainChatList) { haveFullMainChatList = true }
                         } else {
-                            System.err.println("Receive an error for LoadChats:$lineSeparator$`object`")
+                            System.err.println("Receive an error for LoadChats:$newLine$`object`")
                         }
                         Ok.CONSTRUCTOR ->                                 // chats had already been received through updates, let's retry request
                             getMainChatList(limit)
-                        else -> System.err.println("Receive wrong response from TDLib:$lineSeparator$`object`")
+                        else -> System.err.println("Receive wrong response from TDLib:$newLine$`object`")
                     }
                 })
                 return

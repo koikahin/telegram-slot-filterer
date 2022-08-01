@@ -1,6 +1,7 @@
 package org.drinkless.tdlib.example
 
 import org.junit.jupiter.api.Test
+import slotfilter.sizeLimitedSynchronizedMap
 import kotlin.test.assertEquals
 
 internal class SizeLimitedSynchMap {

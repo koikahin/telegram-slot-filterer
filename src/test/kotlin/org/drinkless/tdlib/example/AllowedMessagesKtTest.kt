@@ -2,6 +2,8 @@
 
 package org.drinkless.tdlib.example
 
+import slotfilter.matchesDisallowed
+import slotfilter.matchesPriority
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

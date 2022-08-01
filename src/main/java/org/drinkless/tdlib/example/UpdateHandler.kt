@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi.*
+import slotfilter.interestingUpdates
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
