@@ -16,7 +16,7 @@ import kotlin.coroutines.suspendCoroutine
 
 private const val targetChatId = filteredSlots
 private const val priorityTargetChatId = sri
-private val sourceChatIds = arrayOf(/*allSlots, */mockedAllSlots).also {
+private val sourceChatIds = arrayOf(allSlots, mockedAllSlots).also {
     println("Listening to: ${it.joinToString(", ")}")
 }
 private val destChatIds = arrayOf(targetChatId, priorityTargetChatId)
