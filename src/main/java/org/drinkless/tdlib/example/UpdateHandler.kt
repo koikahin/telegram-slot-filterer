@@ -1,5 +1,8 @@
 package org.drinkless.tdlib.example
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi.*
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +18,9 @@ object UpdateHandler : Client.ResultHandler {
     val basicGroupsFullInfo: ConcurrentMap<Long, BasicGroupFullInfo> = ConcurrentHashMap()
     val usersFullInfo: ConcurrentMap<Long, UserFullInfo> = ConcurrentHashMap()
     override fun onResult(obj: Object) {
-        interestingUpdates(obj)
+        GlobalScope.launch {
+            interestingUpdates(obj)
+        }
         when (obj) {
             is UpdateAuthorizationState ->
                 AuthManager.onAuthorizationStateUpdated((obj as UpdateAuthorizationState).authorizationState)

@@ -1,5 +1,7 @@
 package org.drinkless.tdlib.example
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
 import org.drinkless.tdlib.TdApi.*
@@ -7,19 +9,25 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
-private val sourceChatIds = arrayOf(allSlots, mockedAllSlots).also {
-    println("Listening to: ${it.joinToString(", ")}")
-}
 
 private const val targetChatId = filteredSlots
 private const val priorityTargetChatId = sri
+private val sourceChatIds = arrayOf(/*allSlots, */mockedAllSlots).also {
+    println("Listening to: ${it.joinToString(", ")}")
+}
+private val destChatIds = arrayOf(targetChatId, priorityTargetChatId)
 
-val targetMappings = IdMappings()
-val priorityTargetMappings = IdMappings()
-val idMessages = sizeLimitedSynchronizedMap<Long, String?>(100_000)
+val idMappings = IdMappings()
+val msgIdUpdates = IdMappings()
 
-fun interestingUpdates(event: Object) {
+private val messages = sizeLimitedSynchronizedMap<Long, String>(10_000)
+
+
+suspend fun interestingUpdates(event: Object) {
     val client = Main.client
     when (event) {
         is UpdateNewMessage -> {
@@ -32,47 +40,70 @@ fun interestingUpdates(event: Object) {
         is UpdateMessageContent -> {
             if (event.chatId !in sourceChatIds)
                 return
-//            onEditedMessage(event, client)
+            onMessageEdited(event, client)
+        }
+
+        is UpdateMessageSendSucceeded -> {
+            if (event.message.chatId !in destChatIds)
+                return
+            trackMessageIdUpdate(event, client)
         }
 
         is UpdateDeleteMessages -> {
             if (event.chatId !in sourceChatIds)
                 return
-//            onMessageDelete(event, client)
+            onMessageDelete(event, client)
         }
     }
 }
 
-private fun onMessageDelete(event: UpdateDeleteMessages, client: Client) {
-    event.messageIds.map { idMessages[it] }.filterNotNull().forEach {
-        println("deleted - $it")
-    }
-    client.propagateDelete(event, targetChatId, targetMappings)
-    client.propagateDelete(event, priorityTargetChatId, priorityTargetMappings)
+fun trackMessageIdUpdate(event: UpdateMessageSendSucceeded, client: Client) {
+    val chatId = event.message.chatId
+    msgIdUpdates.setId(chatId, event.oldMessageId, event.message.id)
 }
 
-private fun onEditedMessage(event: UpdateMessageContent, client: Client) {
+fun getFwdIds(msgId: Long): Map<Long, Long> {
+    return idMappings.getId(msgId).mapValues { (fwdChatId, fwdMsgId) ->
+        msgIdUpdates.getId(fwdChatId)[fwdMsgId] ?: fwdMsgId
+    }
+}
+
+private suspend fun onMessageDelete(event: UpdateDeleteMessages, client: Client) {
+    event.messageIds.map { messages[it] }
+        .filterNotNull()
+        .forEach {
+            println(
+                "deleted | " +
+                        soutFmt.format(Instant.now().atZone(ZoneId.systemDefault())) +
+                        "      " +
+                        " | $it"
+            )
+        }
+    client.propagateDelete(event.messageIds)
+}
+
+private suspend fun onMessageEdited(event: UpdateMessageContent, client: Client) {
     val newContent = event.newContent
 
     val msgId = event.messageId
-    if (msgId !in idMessages)
+    if (msgId !in idMappings.keys())
         return
 
-    val origMsg = idMessages[msgId]
     val changedMsg = when (newContent) {
         is MessageText -> newContent.text.text
         is MessagePhoto -> newContent.caption.text
         else -> {
-            System.err.println("Updated content type not handled $event")
+//            System.err.println("Updated content type not handled $event")
             return
         }
     }
 
-    client.sendMessage("Message edited from \"$origMsg\" to \"$changedMsg\"", targetChatId)
+    val fwdMsg = toFwdMsg(Instant.now(), changedMsg)
+    client.propagateEdits(msgId, fwdMsg)
 }
 
-private fun Client.sendMessage(message: String, destChatId: Long) {
-    sendValidated<Message>(
+private suspend fun Client.sendMessage(message: String, destChatId: Long): Message {
+    return sendSuspend(
         SendMessage(
             destChatId,
             0,
@@ -87,7 +118,7 @@ private fun Client.sendMessage(message: String, destChatId: Long) {
 private val soutFmt = DateTimeFormatter.ofPattern("MMM dd hh:mm:ss a")
 private val fwdFmt = DateTimeFormatter.ofPattern("hh:mm:ss a")
 
-private fun onMessagePosted(message: Message, client: Client) {
+private suspend fun onMessagePosted(message: Message, client: Client) = coroutineScope {
     val msgText = message.content.text()!!
     val shouldFwd = msgText.shouldFwd()
     val priority = msgText.shouldFwdPriority()
@@ -96,15 +127,27 @@ private fun onMessagePosted(message: Message, client: Client) {
     val now = Instant.now()
     val delay = Duration.between(msgTime, now).seconds
 
+    val fwdMsgText = toFwdMsg(msgTime, msgText)
+
+    val sout = (if (priority) "**" else "  ") +
+            (if (shouldFwd) " fwd  | " else "      | ") +
+            soutFmt.format(now.atZone(ZoneId.systemDefault())) +
+            " - " + delay.toString().padStart(3) +
+            " | $msgText"
+
+    println(sout)
+
     if (shouldFwd) {
-        println((if (priority) "**" else "  ") +
-                (if (shouldFwd) " fwd  | " else "      | ") +
-                        soutFmt.format(now.atZone(ZoneId.systemDefault())) +
-                        " - " + delay.toString().padStart(3) +
-                        " | " + msgText
-        )
+        messages[message.id] = fwdMsgText
         if (priority) {
-            client.sendMessage(fwdFmt.format(msgTime.atZone(ZoneId.systemDefault())) + ": $msgText", priorityTargetChatId)
+            launch {
+                val fwdMsg = client.sendMessage(fwdMsgText, priorityTargetChatId)
+                idMappings.setId(message.id, priorityTargetChatId, fwdMsg.id)
+            }
+        }
+        launch {
+            val fwdMsg = client.sendMessage(fwdMsgText, targetChatId)
+            idMappings.setId(message.id, targetChatId, fwdMsg.id)
         }
     }
 
@@ -116,32 +159,49 @@ private fun onMessagePosted(message: Message, client: Client) {
 //    }
 }
 
-private fun Client.propagateDelete(event: UpdateDeleteMessages, targetChatId: Long, targetMappings: IdMappings) {
-    val fwdsDeleted = event.messageIds.map {
-        targetMappings.get(it)
-    }.filterNotNull()
-        .toLongArray()
-
-    sendValidated<Ok>(DeleteMessages(targetChatId, fwdsDeleted, true))
+private fun toFwdMsg(msgTime: Instant, msgText: String): String {
+    val fwdMsg = fwdFmt.format(msgTime.atZone(ZoneId.systemDefault())) + ": $msgText"
+    return fwdMsg
 }
 
-private fun Client.fwd(targetChatId: Long, message: Message, mappings: IdMappings) {
-    val forwardMessages = ForwardMessages(
-        targetChatId,
-        message.chatId,
-        longArrayOf(message.id),
-        null,
-        false,
-        false,
-        false
-    )
+private suspend fun Client.propagateDelete(messageIds: LongArray) {
+    val toBeDeleted = messageIds.flatMap { msgId ->
+        getFwdIds(msgId).map { (fwdChatId, fwdMsgId) -> fwdChatId to fwdMsgId }
+    }.groupBy({ it.first }, { it.second })
 
-    sendValidated<Messages>(forwardMessages) { fwdMessages ->
-        val fwdMessage = fwdMessages.messages[0]
-//                println(fwdMessage)
-        mappings.set(message.id, fwdMessage.id)
+    toBeDeleted.map { (chatId, msgIds) ->
+        sendSuspend<Ok>(DeleteMessages(chatId, msgIds.toLongArray(), true))
     }
 }
+
+private suspend fun Client.propagateEdits(srcMsgId: Long, changedMsg: String) {
+    getFwdIds(srcMsgId).map { (targetChatId, targetMsgId) ->
+        sendSuspend<Message>(
+            EditMessageText(
+                targetChatId, targetMsgId, null,
+                InputMessageText(FormattedText(changedMsg, null), false, true)
+            )
+        )
+    }
+}
+
+//private fun Client.fwd(targetChatId: Long, message: Message, mappings: IdMappings) {
+//    val forwardMessages = ForwardMessages(
+//        targetChatId,
+//        message.chatId,
+//        longArrayOf(message.id),
+//        null,
+//        false,
+//        false,
+//        false
+//    )
+//
+//    sendSuspend<Messages>(forwardMessages) { fwdMessages ->
+//        val fwdMessage = fwdMessages.messages[0]
+////                println(fwdMessage)
+//        mappings.set(message.id, fwdMessage.id)
+//    }
+//}
 
 private fun MessageContent.text(): String? = when (this) {
     is MessageText -> {
@@ -154,31 +214,29 @@ private fun MessageContent.text(): String? = when (this) {
     }
 
     else -> {
-//        System.err.println("Unknown content: $this")
         null
     }
 }
 
-inline fun <reified T : Object> Client.sendValidated(
-    query: TdApi.Function<*>,
-    crossinline resultHandler: (T) -> Unit = {}
-) {
+suspend inline fun <reified T : Object> Client.sendSuspend(
+    query: TdApi.Function<*>
+): T = suspendCoroutine { cont ->
     send(query) {
         when (it) {
             is Error -> {
-                System.err.println("Encountered error: $it")
+                cont.resumeWithException(Exception(it.toString()))
             }
 
             null -> {
-                System.err.println("Unexpected null response")
+                cont.resumeWithException(Exception("Unexpected null response"))
             }
 
             !is T -> {
-                System.err.println("Expected result type: ${T::class.java} but found ${it.javaClass}")
+                cont.resumeWithException(Exception("Expected result type: ${T::class.java} but found ${it.javaClass}"))
             }
 
             else -> {
-                resultHandler(it)
+                cont.resume(it)
             }
         }
     }
