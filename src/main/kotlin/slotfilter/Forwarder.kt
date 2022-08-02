@@ -60,7 +60,7 @@ object Forwarder {
         println(sout)
 
         if (shouldFwd) {
-            val postfix = "\n@ " + Formatter.formatTimeForFwd(message.time)
+            val postfix = "\n          - " + Formatter.formatTimeForFwd(message.time)
 
             val correlationId = idGen.generate()
             sourceChat.addSeenMessage(correlationId, message)
