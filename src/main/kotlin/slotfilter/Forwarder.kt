@@ -60,7 +60,7 @@ object Forwarder {
         println(sout)
 
         if (shouldFwd) {
-            val prefix = "                    " + Formatter.formatTimeForFwd(message.time) + "\n"
+            val prefix = ".                    " + Formatter.formatTimeForFwd(message.time) + "\n"
 
             val correlationId = idGen.generate()
             sourceChat.addSeenMessage(correlationId, message)
