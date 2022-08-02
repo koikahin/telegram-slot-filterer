@@ -10,7 +10,7 @@ fun String.matchesAny(regexes: List<Regex>) = regexes.any { it.containsMatchIn(t
 fun String.matchesDisallowed() = matchesAny(DISALLOWED_REGEXES)
 fun String.matchesPriority() = matchesAny(PRIORITY_REGEXES)
 
-fun String.shouldFwdPriority(): Boolean {
+fun String.isPriority(): Boolean {
     return this.matchesPriority()
 }
 

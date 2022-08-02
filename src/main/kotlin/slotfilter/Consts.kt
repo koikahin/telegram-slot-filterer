@@ -7,15 +7,13 @@ object Consts {
     const val API_ID = 13042228
     const val API_HASH = "5fbacaa51fd4ded26972fba200bd16e7"
 
-    const val CHAT_TELEGRAM: Long = 777000
-    const val CHAT_SELF: Long = 5575012853
+    val CHAT_TELEGRAM: Pair<Int, String> = 777000 to "telegram"
+    val CHAT_SELF: Pair<Long, String> = 5575012853 to "self"
+    val CHAT_SRI: Pair<Long, String> = 5246836860 to "sri"
+    val CHAT_ALL_SLOTS: Pair<Long, String> = -1001371184682 to "all"
+    val CHAT_MOCKED_ALL_SLOTS: Pair<Long, String> = -1001761172272 to "mocked"
 
-    const val CHAT_SRI: Long = 5246836860
-
-    const val CHAT_ALL_SLOTS: Long = -1001371184682
-    const val CHAT_MOCKED_ALL_SLOTS: Long = -1001761172272
-
-    const val CHAT_FILTERED_SLOTS: Long = -1001702710052
+    val CHAT_FILTERED_SLOTS: Pair<Long, String> = -1001702710052 to "filtered"
 
     val DISALLOWED_PATTERNS = arrayOf(
         """\bNA\b""",
@@ -41,4 +39,6 @@ object Consts {
         """\bbulk\b""",
         """\b(several|many|lot).*(slot|avail|opening|booking)"""
     )
+
+    const val MAP_SIZE = 10_000
 }

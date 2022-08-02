@@ -19,6 +19,8 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
+lateinit var client: Client
+
 /**
  * Example class for TDLib usage from Java.
  */
@@ -30,8 +32,6 @@ object Main {
             e.printStackTrace()
         }
     }
-
-    lateinit var client: Client
 
     @Volatile
     var haveAuthorization = false
