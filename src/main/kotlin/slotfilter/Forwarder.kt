@@ -60,14 +60,14 @@ object Forwarder {
         println(sout)
 
         if (shouldFwd) {
-            val prefix = ".                    " + Formatter.formatTimeForFwd(message.time) + "\n"
+            val postfix = "\n@ " + Formatter.formatTimeForFwd(message.time)
 
             val correlationId = idGen.generate()
             sourceChat.addSeenMessage(correlationId, message)
             if (isPriority) {
-                launch { chatList.priority.send(correlationId, prefix, msgText, photoDetails) }
+                launch { chatList.priority.send(correlationId, postfix, msgText, photoDetails) }
             }
-            launch { chatList.filtered.send(correlationId, prefix, msgText, photoDetails) }
+            launch { chatList.filtered.send(correlationId, postfix, msgText, photoDetails) }
         }
     }
 

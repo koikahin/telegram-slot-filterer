@@ -49,12 +49,12 @@ class SourceChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
 
 data class PhotoDetails(val remote: InputFileRemote, val width: Int, val height: Int)
 class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
-    private data class Metadata(val prefix: String, val isPhoto: Boolean)
+    private data class Metadata(val postfix: String, val isPhoto: Boolean)
 
     private val msgMetadata = sizeLimitedMap<CorrelationId, Metadata>(Consts.MAP_SIZE)
 
-    suspend fun send(correlationId: CorrelationId, prefix: String, msgText: String, photoDetails: PhotoDetails?) {
-        val message = prefix + msgText
+    suspend fun send(correlationId: CorrelationId, postfix: String, msgText: String, photoDetails: PhotoDetails?) {
+        val message = msgText + postfix
 
         val isPhoto: Boolean
         val sentMessage = if (photoDetails != null) {
@@ -67,7 +67,7 @@ class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
 
         val msgId = sentMessage.id.asMsgId
 
-        msgMetadata { this[correlationId] = Metadata(prefix, isPhoto) }
+        msgMetadata { this[correlationId] = Metadata(postfix, isPhoto) }
 
         setCorrelationId(msgId, correlationId)
     }
@@ -75,7 +75,7 @@ class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
     suspend fun update(correlationId: CorrelationId, newContent: String) {
         val msgId = getMsgId(correlationId) ?: return
         val md = msgMetadata { this[correlationId] } ?: return
-        val message = md.prefix + newContent
+        val message = newContent + md.postfix
         if (md.isPhoto) {
             client.updatePhotoCaption(chatId, msgId, message)
         } else {
