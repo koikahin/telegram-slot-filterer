@@ -47,22 +47,40 @@ class SourceChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
     fun getSeenMessage(correlationId: CorrelationId) = seenMessages { this[correlationId] }
 }
 
+data class PhotoDetails(val remote: InputFileRemote, val width: Int, val height: Int)
 class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
-    private val prefixes = sizeLimitedMap<CorrelationId, String>(Consts.MAP_SIZE)
+    private data class Metadata(val prefix: String, val isPhoto: Boolean)
 
-    suspend fun send(correlationId: CorrelationId, prefix: String, msgText: String) {
-        val sentMessage = client.sendMessage(chatId, prefix + msgText)
+    private val msgMetadata = sizeLimitedMap<CorrelationId, Metadata>(Consts.MAP_SIZE)
+
+    suspend fun send(correlationId: CorrelationId, prefix: String, msgText: String, photoDetails: PhotoDetails?) {
+        val message = prefix + msgText
+
+        val isPhoto: Boolean
+        val sentMessage = if (photoDetails != null) {
+            isPhoto = true
+            client.sendPhoto(chatId, message, photoDetails)
+        } else {
+            isPhoto = false
+            client.sendMessage(chatId, message)
+        }
+
         val msgId = sentMessage.id.asMsgId
 
-        prefixes { this[correlationId] = prefix }
+        msgMetadata { this[correlationId] = Metadata(prefix, isPhoto) }
 
         setCorrelationId(msgId, correlationId)
     }
 
     suspend fun update(correlationId: CorrelationId, newContent: String) {
         val msgId = getMsgId(correlationId) ?: return
-        val prefix = prefixes { this[correlationId] } ?: return
-        client.updateMessage(chatId, msgId, prefix + newContent)
+        val md = msgMetadata { this[correlationId] } ?: return
+        val message = md.prefix + newContent
+        if (md.isPhoto) {
+            client.updatePhotoCaption(chatId, msgId, message)
+        } else {
+            client.updateMessage(chatId, msgId, message)
+        }
     }
 
     suspend fun delete(deletedCorrelationIds: List<CorrelationId>) {

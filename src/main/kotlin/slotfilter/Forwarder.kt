@@ -36,7 +36,22 @@ object Forwarder {
     }
 
     private suspend fun messagePosted(sourceChat: SourceChat, message: Message) = coroutineScope {
-        val msgText = message.content.text()
+        val content = message.content
+        val msgText = content.text()
+        val photoDetails = when(content) {
+            is MessagePhoto -> {
+                val largestPhotoSize = content.photo?.sizes
+                    ?.maxByOrNull { it.photo?.remote?.uploadedSize ?: 0}
+                if (largestPhotoSize?.photo?.remote != null) {
+                    PhotoDetails(
+                        InputFileRemote(largestPhotoSize.photo.remote.id),
+                        largestPhotoSize.width,
+                        largestPhotoSize.height
+                    )
+                } else null
+            }
+            else -> null
+        }
 
         val shouldFwd = msgText.shouldFwd()
         val isPriority = msgText.isPriority()
@@ -45,14 +60,14 @@ object Forwarder {
         println(sout)
 
         if (shouldFwd) {
-            val prefix = Formatter.formatTimeForFwd(message.time) + ": "
+            val prefix = Formatter.formatTimeForFwd(message.time) + "\n"
 
             val correlationId = idGen.generate()
             sourceChat.addSeenMessage(correlationId, message)
             if (isPriority) {
-                launch { chatList.priority.send(correlationId, prefix, msgText) }
+                launch { chatList.priority.send(correlationId, prefix, msgText, photoDetails) }
             }
-            launch { chatList.filtered.send(correlationId, prefix, msgText) }
+            launch { chatList.filtered.send(correlationId, prefix, msgText, photoDetails) }
         }
     }
 

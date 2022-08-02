@@ -30,8 +30,7 @@ suspend inline fun <reified T : Object> Client.sendSuspend(
         }
     }
 }
-
-suspend fun Client.sendMessage(chatId: ChatId, message: String): Message {
+suspend fun Client.sendMessage(chatId: ChatId, messageContent: InputMessageContent): Message {
     return sendSuspend(
         SendMessage(
             chatId.asLong,
@@ -39,9 +38,20 @@ suspend fun Client.sendMessage(chatId: ChatId, message: String): Message {
             0,
             null,
             null,
-            InputMessageText(FormattedText(message, null), false, true)
+            messageContent
         )
     )
+}
+suspend fun Client.sendMessage(chatId: ChatId, message: String): Message {
+    val formattedText = FormattedText(message, null)
+
+    return sendMessage(chatId, InputMessageText(formattedText, false, true))
+}
+
+suspend fun Client.sendPhoto(chatId: ChatId, caption: String, photoDetails: PhotoDetails): Message {
+    val formattedText = FormattedText(caption, null)
+    val content = InputMessagePhoto(photoDetails.remote, null, null, photoDetails.width, photoDetails.height, formattedText, 0)
+    return sendMessage(chatId, content)
 }
 
 suspend fun Client.updateMessage(chatId: ChatId, msgId: MsgId, newMessage: String): Message {
@@ -49,6 +59,14 @@ suspend fun Client.updateMessage(chatId: ChatId, msgId: MsgId, newMessage: Strin
         EditMessageText(
             chatId.asLong, msgId.asLong, null,
             InputMessageText(FormattedText(newMessage, null), false, true)
+        )
+    )
+}
+suspend fun Client.updatePhotoCaption(chatId: ChatId, msgId: MsgId, newMessage: String): Message {
+    return sendSuspend(
+        EditMessageCaption(
+            chatId.asLong, msgId.asLong, null,
+            FormattedText(newMessage, null)
         )
     )
 }
