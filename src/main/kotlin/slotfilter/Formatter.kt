@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 
 object Formatter {
     private val timeFmtPrint = DateTimeFormatter.ofPattern("MMM dd hh:mm:ss a")
-    private val timeFmtFwd = DateTimeFormatter.ofPattern("hh:mm:ss a")
+    private val timeFmtFwd = DateTimeFormatter.ofPattern("hh:mm:ss")
 
     fun formatNewMessageForPrint(message: Message, shouldFwd: Boolean, isPriority: Boolean): String {
         val msgText = message.content.text()
