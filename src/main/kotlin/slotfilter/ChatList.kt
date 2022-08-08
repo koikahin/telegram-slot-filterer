@@ -4,11 +4,11 @@ import org.drinkless.tdlib.TdApi
 import slotfilter.Consts.CHAT_ALL_SLOTS
 import slotfilter.Consts.CHAT_FILTERED_SLOTS
 import slotfilter.Consts.CHAT_MOCKED_ALL_SLOTS
-import slotfilter.Consts.CHAT_SRI
+import slotfilter.Consts.CHAT_PRIORITY_SLOTS
 
 class ChatList {
     val filtered = TargetChat(CHAT_FILTERED_SLOTS)
-    val priority = TargetChat(CHAT_SRI)
+    val priority = TargetChat(CHAT_PRIORITY_SLOTS)
 
     private val sourceChats = listOf(
         SourceChat(CHAT_MOCKED_ALL_SLOTS),

@@ -13,6 +13,7 @@ object Consts {
     val CHAT_ALL_SLOTS: Pair<Long, String> = -1001371184682 to "all"
     val CHAT_MOCKED_ALL_SLOTS: Pair<Long, String> = -1001761172272 to "mocked"
 
+    val CHAT_PRIORITY_SLOTS: Pair<Long, String> = -1001631626725 to "priority"
     val CHAT_FILTERED_SLOTS: Pair<Long, String> = -1001702710052 to "filtered"
 
     val DISALLOWED_PATTERNS = arrayOf(
