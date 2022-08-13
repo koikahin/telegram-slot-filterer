@@ -88,10 +88,17 @@ object Forwarder {
     private suspend fun messagePinned(sourceChat: SourceChat, event: UpdateMessageIsPinned) {
         val msgId = event.messageId.asMsgId
         val correlationId = sourceChat.getCorrelationId(msgId) ?: return
+
+        val origMsgStr = sourceChat.getSeenMessage(correlationId)
+
         if (event.isPinned) {
+            if (origMsgStr != null)
+                println(Formatter.formatPinnedForPrint(origMsgStr))
             chatList.priority.pin(correlationId)
             chatList.filtered.pin(correlationId)
         } else {
+            if (origMsgStr != null)
+                println(Formatter.formatUnpinnedForPrint(origMsgStr))
             chatList.priority.unpin(correlationId)
             chatList.filtered.unpin(correlationId)
         }
