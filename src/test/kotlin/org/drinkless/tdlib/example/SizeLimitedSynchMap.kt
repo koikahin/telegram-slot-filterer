@@ -8,7 +8,7 @@ internal class SizeLimitedSynchMap {
     @Test
     fun mapSizeTest1() {
         val map = sizeLimitedMap<Int, String>(1)
-        map {
+        map.synchronized {
             this[1] = "1"
             assertEquals(this[1], "1")
             assertEquals(this.size, 1)
@@ -23,7 +23,7 @@ internal class SizeLimitedSynchMap {
     @Test
     fun mapSizeTest0() {
         val map = sizeLimitedMap<Int, String>(0)
-        map {
+        map.synchronized {
             this[1] = "1"
             assertEquals(this[1], null)
             assertEquals(this.size, 0)
@@ -33,7 +33,7 @@ internal class SizeLimitedSynchMap {
     @Test
     fun mapSizeTest2() {
         val map = sizeLimitedMap<Int, String>(2)
-        map {
+        map.synchronized {
             this[1] = "1"
             this[2] = "2"
             assertEquals(this[1], "1")

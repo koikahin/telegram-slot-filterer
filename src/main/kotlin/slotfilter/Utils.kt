@@ -13,13 +13,13 @@ fun <K, V> sizeLimitedMap(maxSize: Int): Unsafe<MutableMap<K, V>> = Unsafe(objec
 })
 
 class Unsafe<T : Any>(val inner: T) {
-    inline operator fun <R> invoke(fn: T.() -> R): R = synchronized(inner){
+    inline fun <R> synchronized(fn: T.() -> R): R = synchronized(inner){
         inner.fn()
     }
 }
 
 
-fun TdApi.MessageContent.text(): String = when (this) {
+fun TdApi.MessageContent.text(): String? = when (this) {
     is TdApi.MessageText -> {
         this.text.text
     }
@@ -29,9 +29,7 @@ fun TdApi.MessageContent.text(): String = when (this) {
         this.caption.text
     }
 
-    else -> {
-        "<unknown type ${this.javaClass.simpleName}>"
-    }
+    else -> { null }
 }
 
 val TdApi.Message.time: Instant get() = Instant.ofEpochSecond(date.toLong())
