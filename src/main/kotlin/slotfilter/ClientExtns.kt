@@ -52,6 +52,10 @@ suspend fun Client.pinMessage(chatId: ChatId, messageId: MsgId) {
     sendSuspend<Ok>(PinChatMessage(chatId.asLong, messageId.asLong, false, false))
 }
 
+suspend fun Client.unpinMessage(chatId: ChatId, messageId: MsgId) {
+    sendSuspend<Ok>(UnpinChatMessage(chatId.asLong, messageId.asLong))
+}
+
 suspend fun Client.sendPhoto(chatId: ChatId, caption: String, photoDetails: PhotoDetails): Message {
     val formattedText = FormattedText(caption, null)
     val content = InputMessagePhoto(photoDetails.remote, null, null, photoDetails.width, photoDetails.height, formattedText, 0)

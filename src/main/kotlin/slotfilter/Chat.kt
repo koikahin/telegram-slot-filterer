@@ -89,6 +89,11 @@ class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
         client.pinMessage(chatId, msgId)
     }
 
+    suspend fun unpin(correlationId: CorrelationId) {
+        val msgId = getMsgId(correlationId) ?: return
+        client.unpinMessage(chatId, msgId)
+    }
+
     suspend fun delete(deletedCorrelationIds: List<CorrelationId>) {
         val msgIds = getMsgIds(deletedCorrelationIds.toSet())
         if (msgIds.isEmpty())

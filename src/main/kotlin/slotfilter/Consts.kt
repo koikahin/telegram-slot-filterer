@@ -45,5 +45,5 @@ object Consts {
         """\b(several|many|lot).*(slot|avail|opening|booking)"""
     )
 
-    const val MAP_SIZE = 200
+    const val MAP_SIZE = 10000
 }
