@@ -17,7 +17,7 @@ object Consts {
     val CHAT_FILTERED_SLOTS: Pair<Long, String> = -1001702710052 to "filtered"
 
     val FORCE_ALLOW_PATTERNS = arrayOf(
-        """\bToday's Pattern\b.*effective 12.*"""
+        """\bToday.*Pattern\b.*effective 12.*"""
     )
 
     val DISALLOWED_PATTERNS = arrayOf(
