@@ -11,37 +11,40 @@ object Forwarder {
     suspend fun processEvent(event: Object) {
         when (event) {
             is UpdateNewMessage -> {
-                val sourceChat = chatList.getSourceChat(event.message)
-                if (sourceChat != null)
-                    messagePosted(sourceChat, event.message)
+                val sourceChat = chatList.getSourceChat(event.message) ?: return
+                messagePosted(sourceChat, event.message)
             }
 
             is UpdateMessageContent -> {
-                val sourceChat = chatList.getSourceChat(event.chatId)
-                if (sourceChat != null)
-                    messageEdited(sourceChat, event)
+                val sourceChat = chatList.getSourceChat(event.chatId) ?: return
+                messageEdited(sourceChat, event)
             }
 
             is UpdateDeleteMessages -> {
-                val sourceChat = chatList.getSourceChat(event.chatId)
-                if (sourceChat != null)
-                    deleteMessage(sourceChat, event)
+                val sourceChat = chatList.getSourceChat(event.chatId) ?: return
+                deleteMessage(sourceChat, event)
             }
 
             is UpdateMessageSendSucceeded -> {
-                chatList.getChat(event.message.chatId)
-                    ?.msgIdChange(event.oldMessageId.asMsgId, event.message.id.asMsgId)
+                val chat = chatList.getChat(event.message.chatId) ?: return
+                chat.msgIdChange(event.oldMessageId.asMsgId, event.message.id.asMsgId)
+            }
+
+            is UpdateMessageIsPinned -> {
+                val sourceChat = chatList.getSourceChat(event.chatId) ?: return
+                messagePinned(sourceChat, event)
             }
         }
     }
 
     private suspend fun messagePosted(sourceChat: SourceChat, message: Message) = coroutineScope {
         val content = message.content
-        val msgText = content.text()
-        val photoDetails = when(content) {
+        val msgText = content.text() ?: return@coroutineScope
+
+        val photoDetails = when (content) {
             is MessagePhoto -> {
                 val largestPhotoSize = content.photo?.sizes
-                    ?.maxByOrNull { it.photo?.remote?.uploadedSize ?: 0}
+                    ?.maxByOrNull { it.photo?.remote?.uploadedSize ?: 0 }
                 if (largestPhotoSize?.photo?.remote != null) {
                     PhotoDetails(
                         InputFileRemote(largestPhotoSize.photo.remote.id),
@@ -50,6 +53,7 @@ object Forwarder {
                     )
                 } else null
             }
+
             else -> null
         }
 
@@ -72,13 +76,20 @@ object Forwarder {
     }
 
     private suspend fun messageEdited(sourceChat: SourceChat, event: UpdateMessageContent) {
+        val newContent = event.newContent.text() ?: return
+
         val msgId = event.messageId.asMsgId
         val correlationId = sourceChat.getCorrelationId(msgId) ?: return
 
-        val newContent = event.newContent.text()
-
         chatList.priority.update(correlationId, newContent)
         chatList.filtered.update(correlationId, newContent)
+    }
+
+    private suspend fun messagePinned(sourceChat: SourceChat, event: UpdateMessageIsPinned) {
+        val msgId = event.messageId.asMsgId
+        val correlationId = sourceChat.getCorrelationId(msgId) ?: return
+        chatList.priority.pin(correlationId)
+        chatList.filtered.pin(correlationId)
     }
 
     private suspend fun deleteMessage(sourceChat: SourceChat, event: UpdateDeleteMessages) {

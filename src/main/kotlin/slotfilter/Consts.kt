@@ -16,9 +16,13 @@ object Consts {
     val CHAT_PRIORITY_SLOTS: Pair<Long, String> = -1001631626725 to "priority"
     val CHAT_FILTERED_SLOTS: Pair<Long, String> = -1001702710052 to "filtered"
 
+    val FORCE_ALLOW_PATTERNS = arrayOf(
+        """\bToday's Pattern\b.*effective 12.*"""
+    )
+
     val DISALLOWED_PATTERNS = arrayOf(
         """\bNA\b""",
-        """\bNA\b""",
+        """\bno all""",
         """\bNOT AVAIL""",
         """\bnone avail""",
         """\bno slots avail""",
@@ -41,5 +45,5 @@ object Consts {
         """\b(several|many|lot).*(slot|avail|opening|booking)"""
     )
 
-    const val MAP_SIZE = 10_000
+    const val MAP_SIZE = 200
 }

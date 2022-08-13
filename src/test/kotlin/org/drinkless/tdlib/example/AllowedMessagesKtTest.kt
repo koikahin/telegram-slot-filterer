@@ -2,10 +2,10 @@
 
 package org.drinkless.tdlib.example
 
-import slotfilter.matchesDisallowed
-import slotfilter.matchesPriority
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import slotfilter.isPriority
+import slotfilter.shouldFwd
 
 internal class AllowedMessagesKtTest {
     @Test
@@ -17,6 +17,7 @@ internal class AllowedMessagesKtTest {
         "ana" shouldBe allowed
         "n a" shouldBe allowed
         "na all" shouldBe disallowed
+        "no all" shouldBe disallowed
         ".na" shouldBe disallowed
         "not av" shouldBe allowed
         "not available" shouldBe disallowed
@@ -50,6 +51,9 @@ internal class AllowedMessagesKtTest {
         "make money by" shouldBe disallowed
         "make a lot of money" shouldBe disallowed
         "like making a lot of money" shouldBe disallowed
+        "na today's pattern" shouldBe disallowed
+        "na pattern" shouldBe disallowed
+        "today's pattern (effective 12am CST) na" shouldBe allowed
     }
 
     @Test
@@ -78,10 +82,10 @@ object priority
 object not_priority
 
 private infix fun String.shouldBe(obj: Any) = when(obj) {
-    is disallowed -> this.matchesDisallowed() shouldBe true
-    is allowed -> this.matchesDisallowed() shouldBe false
-    is priority -> this.matchesPriority() shouldBe true
-    is not_priority -> this.matchesPriority() shouldBe false
+    is disallowed -> this.shouldFwd() shouldBe false
+    is allowed -> this.shouldFwd() shouldBe true
+    is priority -> this.isPriority() shouldBe true
+    is not_priority -> this.isPriority() shouldBe false
     else -> throw Exception("Invalid")
 }
 

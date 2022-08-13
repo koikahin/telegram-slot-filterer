@@ -120,8 +120,10 @@ object Main {
                         } else {
                             System.err.println("Receive an error for LoadChats:$newLine$`object`")
                         }
+
                         Ok.CONSTRUCTOR ->                                 // chats had already been received through updates, let's retry request
                             getMainChatList(limit)
+
                         else -> System.err.println("Receive wrong response from TDLib:$newLine$`object`")
                     }
                 })

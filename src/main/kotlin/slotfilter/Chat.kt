@@ -8,7 +8,7 @@ open class Chat(val chatId: ChatId, val chatName: String) {
 
     private val msgIdCorrelations = sizeLimitedMap<MsgId, CorrelationId>(Consts.MAP_SIZE)
 
-    fun msgIdChange(prev: MsgId, new: MsgId) = msgIdCorrelations {
+    fun msgIdChange(prev: MsgId, new: MsgId) = msgIdCorrelations.synchronized {
         val corId = this.remove(prev)
         if (corId != null) {
             this[new] = corId
@@ -16,21 +16,21 @@ open class Chat(val chatId: ChatId, val chatName: String) {
         }
     }
 
-    fun getCorrelationId(msgId: MsgId) = msgIdCorrelations { this[msgId] }
+    fun getCorrelationId(msgId: MsgId) = msgIdCorrelations.synchronized { this[msgId] }
 
-    protected fun getMsgId(correlationId: CorrelationId): MsgId? = msgIdCorrelations<MsgId?> {
+    protected fun getMsgId(correlationId: CorrelationId): MsgId? = msgIdCorrelations.synchronized {
         // inefficiency is okay for this usecase. bi-maps that are size limited are going to be a pain to implement
         forEach { if (it.value == correlationId) return it.key }
         return null
     }
 
     protected fun getMsgIds(correlationIds: Set<CorrelationId>): List<MsgId> {
-        return msgIdCorrelations {
+        return msgIdCorrelations.synchronized {
             filter { it.value in correlationIds }.map { it.key }
         }
     }
 
-    protected fun setCorrelationId(msgId: MsgId, correlationId: CorrelationId) = msgIdCorrelations {
+    protected fun setCorrelationId(msgId: MsgId, correlationId: CorrelationId) = msgIdCorrelations.synchronized {
         verbose(correlationId, chatName, msgId)
         this[msgId] = correlationId
     }
@@ -40,11 +40,12 @@ class SourceChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
     private val seenMessages = sizeLimitedMap<CorrelationId, String>(Consts.MAP_SIZE)
 
     fun addSeenMessage(correlationId: CorrelationId, message: Message) {
+        val text = message.content.text() ?: return
         setCorrelationId(message.id.asMsgId, correlationId)
-        seenMessages { this[correlationId] = message.content.text() }
+        seenMessages.synchronized { this[correlationId] = text }
     }
 
-    fun getSeenMessage(correlationId: CorrelationId) = seenMessages { this[correlationId] }
+    fun getSeenMessage(correlationId: CorrelationId) = seenMessages.synchronized { this[correlationId] }
 }
 
 data class PhotoDetails(val remote: InputFileRemote, val width: Int, val height: Int)
@@ -67,20 +68,25 @@ class TargetChat(chatDtls: Pair<Long, String>) : Chat(chatDtls) {
 
         val msgId = sentMessage.id.asMsgId
 
-        msgMetadata { this[correlationId] = Metadata(postfix, isPhoto) }
+        msgMetadata.synchronized { this[correlationId] = Metadata(postfix, isPhoto) }
 
         setCorrelationId(msgId, correlationId)
     }
 
     suspend fun update(correlationId: CorrelationId, newContent: String) {
         val msgId = getMsgId(correlationId) ?: return
-        val md = msgMetadata { this[correlationId] } ?: return
+        val md = msgMetadata.synchronized { this[correlationId] } ?: return
         val message = newContent + md.postfix
         if (md.isPhoto) {
             client.updatePhotoCaption(chatId, msgId, message)
         } else {
             client.updateMessage(chatId, msgId, message)
         }
+    }
+
+    suspend fun pin(correlationId: CorrelationId) {
+        val msgId = getMsgId(correlationId) ?: return
+        client.pinMessage(chatId, msgId)
     }
 
     suspend fun delete(deletedCorrelationIds: List<CorrelationId>) {
