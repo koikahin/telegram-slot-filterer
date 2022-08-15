@@ -55,6 +55,7 @@ internal class AllowedMessagesKtTest {
         "na pattern" shouldBe disallowed
         "today's pattern (effective 12am CST) na" shouldBe allowed
         "Today’s Pattern- 08/13 (effective 12am CST) NA: Not Available" shouldBe allowed
+        "Todays Pattern 08/15 (effective after 12am CST) NA: Not Available" shouldBe allowed
     }
 
     @Test
